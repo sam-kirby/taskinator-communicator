@@ -1,0 +1,13 @@
+[package]
+name = "taskinator-communicator"
+version = "0.1.0"
+authors = ["Sam Kirby <sam.kirby94@hotmail.co.uk>"]
+edition = "2018"
+
+[dependencies]
+tracing = "0.1"
+# sysinfo = "0.16"
+windows = "0.2"
+
+[build-dependencies]
+windows = "0.2"
