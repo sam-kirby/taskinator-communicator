@@ -40,7 +40,6 @@ pub enum State {
 
 #[repr(u32)]
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub enum MeetingState {
     Discussion,
     NotVoted,
@@ -172,7 +171,7 @@ impl Game {
     }
 
     unsafe fn read_internal_state(&self, client_state_addr: GameUSize) -> Result<InternalState> {
-        const INTERNAL_STATE_OFFSET: GameUSize = 0x64;
+        const INTERNAL_STATE_OFFSET: GameUSize = 0x6C;
 
         let mut internal_state = MaybeUninit::<InternalState>::uninit();
         let mut count = 0;
@@ -386,35 +385,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x01C57F54; // FMLLKEACGIO
+    const CLASS_OFFSET: GameUSize = 0x02C6C278; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x01C57BE8; // EGLJNOMOGNP
+    const CLASS_OFFSET: GameUSize = 0x02C6C07C; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x01C573A4; // OOCJALPKPEP
-}
-
-struct EjectionScreen {}
-
-impl InstancedClass for EjectionScreen {
-    const CLASS_OFFSET: GameUSize = 0x00811FE0; // CNNGMDOPELD
-}
-
-struct EjectionScreenHQ {}
-
-impl InstancedClass for EjectionScreenHQ {
-    const CLASS_OFFSET: GameUSize = 0x00D6C420; // JCAGPJAFPIK
-}
-
-struct CurrentMap {}
-
-impl InstancedClass for CurrentMap {
-    const CLASS_OFFSET: GameUSize = 0x00982100; // HLBNNHFCNAJ
+    const CLASS_OFFSET: GameUSize = 0x02C6B78C; // MeetingHud
 }
