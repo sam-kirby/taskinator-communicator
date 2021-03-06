@@ -1,13 +1,12 @@
 [package]
 name = "taskinator-communicator"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Sam Kirby <sam.kirby94@hotmail.co.uk>"]
 edition = "2018"
 license = "AGPL-3.0-or-later"
 
 [dependencies]
 tracing = "0.1"
-# sysinfo = "0.16"
 windows = "0.2"
 
 [build-dependencies]
