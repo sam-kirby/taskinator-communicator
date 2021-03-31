@@ -52,7 +52,7 @@ pub enum MeetingState {
 pub struct Player {
     id: u8,
     pub name: String,
-    pub colour: u8,
+    pub colour: i32,
     hat: u32,
     pet: u32,
     skin: u32,
