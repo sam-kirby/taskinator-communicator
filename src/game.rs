@@ -171,7 +171,7 @@ impl Game {
     }
 
     unsafe fn read_internal_state(&self, client_state_addr: GameUSize) -> Result<InternalState> {
-        const INTERNAL_STATE_OFFSET: GameUSize = 0x6C;
+        const INTERNAL_STATE_OFFSET: GameUSize = 0x70;
 
         let mut internal_state = MaybeUninit::<InternalState>::uninit();
         let mut count = 0;
@@ -234,7 +234,7 @@ impl Game {
     }
 
     unsafe fn read_player(&self, player_addr: GameUSize) -> Result<Player> {
-        const PLAYER_STRUCT_SIZE: usize = 40;
+        const PLAYER_STRUCT_SIZE: usize = 44;
         let mut raw_bytes: Vec<u8> = Vec::with_capacity(PLAYER_STRUCT_SIZE);
         let mut count = 0;
 
@@ -254,15 +254,16 @@ impl Game {
 
         let id = raw_bytes[0];
         let name_addr = u32::from_ne_bytes(raw_bytes[4..8].try_into()?);
-        let colour = raw_bytes[8];
-        let hat = u32::from_ne_bytes(raw_bytes[12..16].try_into()?);
-        let pet = u32::from_ne_bytes(raw_bytes[16..20].try_into()?);
-        let skin = u32::from_ne_bytes(raw_bytes[20..24].try_into()?);
-        let disconnected = raw_bytes[24] != 0;
-        let tasks_addr = u32::from_ne_bytes(raw_bytes[28..32].try_into()?);
-        let impostor = raw_bytes[32] != 0;
-        let dead = raw_bytes[33] != 0;
-        let game_object_addr = u32::from_ne_bytes(raw_bytes[36..40].try_into()?);
+        let unknown_bool = raw_bytes[8] != 0;
+        let colour = i32::from_ne_bytes(raw_bytes[12..16].try_into()?);
+        let hat = u32::from_ne_bytes(raw_bytes[16..20].try_into()?);
+        let pet = u32::from_ne_bytes(raw_bytes[20..24].try_into()?);
+        let skin = u32::from_ne_bytes(raw_bytes[24..28].try_into()?);
+        let disconnected = raw_bytes[28] != 0;
+        let tasks_addr = u32::from_ne_bytes(raw_bytes[32..36].try_into()?);
+        let impostor = raw_bytes[36] != 0;
+        let dead = raw_bytes[37] != 0;
+        let game_object_addr = u32::from_ne_bytes(raw_bytes[40..44].try_into()?);
 
         let name = self.read_string(name_addr)?;
 
@@ -385,17 +386,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x02C6C278; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x028A5BFC; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x02C6C07C; // GameData
+    const CLASS_OFFSET: GameUSize = 0x028C1230; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x02C6B78C; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x0289E7F8; // MeetingHud
 }
