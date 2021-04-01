@@ -254,7 +254,7 @@ impl Game {
 
         let id = raw_bytes[0];
         let name_addr = u32::from_ne_bytes(raw_bytes[4..8].try_into()?);
-        let unknown_bool = raw_bytes[8] != 0;
+        let _unknown_bool = raw_bytes[8] != 0;
         let colour = i32::from_ne_bytes(raw_bytes[12..16].try_into()?);
         let hat = u32::from_ne_bytes(raw_bytes[16..20].try_into()?);
         let pet = u32::from_ne_bytes(raw_bytes[20..24].try_into()?);
@@ -386,17 +386,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x028D2370; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x028DFEB4; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x028ED93C; // GameData
+    const CLASS_OFFSET: GameUSize = 0x028FB4D4; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x028CAEB8; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x028D8948; // MeetingHud
 }
