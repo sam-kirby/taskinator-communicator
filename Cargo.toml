@@ -7,7 +7,13 @@ license = "AGPL-3.0-or-later"
 
 [dependencies]
 tracing = "0.1"
-windows = "0.2"
 
-[build-dependencies]
-windows = "0.2"
+[dependencies.winapi]
+version = "0.3"
+features = [
+    "std",
+    "errhandlingapi",
+    "memoryapi",
+    "processthreadsapi",
+    "psapi",
+]
