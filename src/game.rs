@@ -11,7 +11,7 @@ use winapi::{
         memoryapi::ReadProcessMemory,
         processthreadsapi::OpenProcess,
         psapi::{EnumProcessModulesEx, GetModuleBaseNameW},
-        winnt::{HANDLE, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ},
+        winnt::{PROCESS_QUERY_INFORMATION, PROCESS_VM_READ},
     },
 };
 
@@ -20,7 +20,7 @@ use crate::{error::Error, Result};
 type GameUSize = u32;
 
 pub struct Game {
-    handle: HANDLE,
+    handle: usize,
     ga_addr: GameUSize,
 }
 
@@ -128,7 +128,7 @@ impl Game {
         });
 
         if let Some(ga_addr) = ga_addr.map(|addr| addr as u32) {
-            Ok(Game { handle, ga_addr })
+            Ok(Game { handle: handle as usize, ga_addr })
         } else {
             Err(Error::MissingGaError.into())
         }
@@ -179,7 +179,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (client_state_addr + INTERNAL_STATE_OFFSET) as *mut c_void,
             internal_state.as_mut_ptr() as *mut c_void,
             size_of::<InternalState>(),
@@ -206,7 +206,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_list_addr + PLAYER_LIST_SIZE_OFFSET) as *mut c_void,
             player_count.as_mut_ptr() as *mut c_void,
             size_of::<GameUSize>(),
@@ -241,7 +241,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_addr + 8) as *mut c_void, // + 8 to skip klass/monitor fields
             raw_bytes.as_mut_ptr() as *mut c_void,
             PLAYER_STRUCT_SIZE,
@@ -294,7 +294,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_manager_addr + TASKS_OFFSET) as *mut c_void,
             tasks_tuple.as_mut_ptr() as *mut c_void,
             size_of::<(GameUSize, GameUSize)>(),
@@ -315,7 +315,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (meeting_screen_addr + MEETING_STATE_OFFSET) as *mut c_void,
             meeting_state.as_mut_ptr() as *mut c_void,
             size_of::<MeetingState>(),
@@ -342,7 +342,7 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             address as *mut c_void,
             ptr.as_mut_ptr() as *mut c_void,
             size_of::<GameUSize>(),
@@ -362,7 +362,7 @@ impl Game {
 
         let mut str_raw: Vec<u16> = Vec::with_capacity(str_len as usize);
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (address + 12) as *mut c_void,
             str_raw.as_mut_ptr() as *mut c_void,
             str_len as usize * size_of::<u16>(),
