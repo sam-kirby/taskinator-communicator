@@ -128,7 +128,10 @@ impl Game {
         });
 
         if let Some(ga_addr) = ga_addr.map(|addr| addr as u32) {
-            Ok(Game { handle: handle as usize, ga_addr })
+            Ok(Game {
+                handle: handle as usize,
+                ga_addr,
+            })
         } else {
             Err(Error::MissingGaError.into())
         }
@@ -236,7 +239,7 @@ impl Game {
     }
 
     unsafe fn read_player(&self, player_addr: GameUSize) -> Result<Player> {
-        const PLAYER_STRUCT_SIZE: usize = 44;
+        const PLAYER_STRUCT_SIZE: usize = 0x2C;
         let mut raw_bytes: Vec<u8> = Vec::with_capacity(PLAYER_STRUCT_SIZE);
         let mut count = 0;
 
@@ -388,17 +391,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x0287BB14; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x028E98F4; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x0289744C; // GameData
+    const CLASS_OFFSET: GameUSize = 0x0290551C; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x028747C0; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x028E25A8; // MeetingHud
 }
