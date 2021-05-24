@@ -6,11 +6,6 @@
     warnings
 )]
 
-#[allow(clippy::all, clippy::pedantic)]
-pub mod bindings {
-    ::windows::include_bindings!();
-}
-
 pub mod error;
 pub mod game;
 

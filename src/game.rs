@@ -4,21 +4,23 @@ use std::{
     mem::{size_of, MaybeUninit},
 };
 
-use crate::{
-    bindings::windows::win32::{
-        debug::{GetLastError, ReadProcessMemory},
-        process_status::{K32EnumProcessModulesEx, K32GetModuleBaseNameW},
-        system_services::{OpenProcess, HANDLE},
-        windows_programming::ProcessAccessRights,
+use winapi::{
+    shared::minwindef::HMODULE,
+    um::{
+        errhandlingapi::GetLastError,
+        memoryapi::ReadProcessMemory,
+        processthreadsapi::OpenProcess,
+        psapi::{EnumProcessModulesEx, GetModuleBaseNameW},
+        winnt::{PROCESS_QUERY_INFORMATION, PROCESS_VM_READ},
     },
-    error::Error,
-    Result,
 };
+
+use crate::{error::Error, Result};
 
 type GameUSize = u32;
 
 pub struct Game {
-    handle: HANDLE,
+    handle: usize,
     ga_addr: GameUSize,
 }
 
@@ -79,17 +81,17 @@ impl Game {
 
         let handle = unsafe {
             OpenProcess(
-                (ProcessAccessRights::QueryInformation | ProcessAccessRights::VmRead).0,
+                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
                 false.into(),
                 pid as u32,
             )
         };
 
-        let mut modules: Vec<isize> = Vec::with_capacity(MAX_MODULE_COUNT);
+        let mut modules: Vec<HMODULE> = Vec::with_capacity(MAX_MODULE_COUNT);
         let mut count_bytes = 0;
 
         let enum_modules_result = unsafe {
-            K32EnumProcessModulesEx(
+            EnumProcessModulesEx(
                 handle,
                 modules.as_mut_ptr(),
                 size_of::<isize>() as u32 * MAX_MODULE_COUNT as u32,
@@ -100,7 +102,7 @@ impl Game {
 
         unsafe { modules.set_len(count_bytes as usize / size_of::<isize>()) };
 
-        if enum_modules_result.is_err() {
+        if enum_modules_result == 0 {
             return Err(Error::EnumModuleError(unsafe { GetLastError() }).into());
         }
 
@@ -108,7 +110,7 @@ impl Game {
             let mut mod_name: Vec<u16> = Vec::with_capacity(MAX_MODULE_NAME_LEN);
 
             let len = unsafe {
-                K32GetModuleBaseNameW(
+                GetModuleBaseNameW(
                     handle,
                     hm,
                     mod_name.as_mut_ptr(),
@@ -126,7 +128,10 @@ impl Game {
         });
 
         if let Some(ga_addr) = ga_addr.map(|addr| addr as u32) {
-            Ok(Game { handle, ga_addr })
+            Ok(Game {
+                handle: handle as usize,
+                ga_addr,
+            })
         } else {
             Err(Error::MissingGaError.into())
         }
@@ -177,14 +182,14 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (client_state_addr + INTERNAL_STATE_OFFSET) as *mut c_void,
             internal_state.as_mut_ptr() as *mut c_void,
             size_of::<InternalState>(),
             &mut count,
         );
 
-        if read_result.is_err() {
+        if read_result == 0 {
             return Err(Error::ReadError(GetLastError(), count, "internal state").into());
         }
 
@@ -204,14 +209,14 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_list_addr + PLAYER_LIST_SIZE_OFFSET) as *mut c_void,
             player_count.as_mut_ptr() as *mut c_void,
             size_of::<GameUSize>(),
             &mut count,
         );
 
-        if read_result.is_err() {
+        if read_result == 0 {
             return Err(Error::ReadError(GetLastError(), count, "player list size").into());
         }
 
@@ -234,19 +239,19 @@ impl Game {
     }
 
     unsafe fn read_player(&self, player_addr: GameUSize) -> Result<Player> {
-        const PLAYER_STRUCT_SIZE: usize = 44;
+        const PLAYER_STRUCT_SIZE: usize = 0x2C;
         let mut raw_bytes: Vec<u8> = Vec::with_capacity(PLAYER_STRUCT_SIZE);
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_addr + 8) as *mut c_void, // + 8 to skip klass/monitor fields
             raw_bytes.as_mut_ptr() as *mut c_void,
             PLAYER_STRUCT_SIZE,
             &mut count,
         );
 
-        if read_result.is_err() || count != PLAYER_STRUCT_SIZE {
+        if read_result == 0 || count != PLAYER_STRUCT_SIZE {
             return Err(Error::ReadError(GetLastError(), count, "raw player").into());
         }
 
@@ -254,7 +259,7 @@ impl Game {
 
         let id = raw_bytes[0];
         let name_addr = u32::from_ne_bytes(raw_bytes[4..8].try_into()?);
-        let _unknown_bool = raw_bytes[8] != 0;
+        let _dont_censor_name = raw_bytes[8] != 0;
         let colour = i32::from_ne_bytes(raw_bytes[12..16].try_into()?);
         let hat = u32::from_ne_bytes(raw_bytes[16..20].try_into()?);
         let pet = u32::from_ne_bytes(raw_bytes[20..24].try_into()?);
@@ -292,14 +297,14 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (player_manager_addr + TASKS_OFFSET) as *mut c_void,
             tasks_tuple.as_mut_ptr() as *mut c_void,
             size_of::<(GameUSize, GameUSize)>(),
             &mut count,
         );
 
-        if read_result.is_err() {
+        if read_result == 0 {
             return Err(Error::ReadError(GetLastError(), count, "task overview").into());
         }
 
@@ -313,14 +318,14 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (meeting_screen_addr + MEETING_STATE_OFFSET) as *mut c_void,
             meeting_state.as_mut_ptr() as *mut c_void,
             size_of::<MeetingState>(),
             &mut count,
         );
 
-        if read_result.is_err() {
+        if read_result == 0 {
             return Err(Error::ReadError(GetLastError(), count, "meeting state").into());
         }
 
@@ -340,14 +345,14 @@ impl Game {
         let mut count = 0;
 
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             address as *mut c_void,
             ptr.as_mut_ptr() as *mut c_void,
             size_of::<GameUSize>(),
             &mut count,
         );
 
-        if read_result.is_err() {
+        if read_result == 0 {
             return Err(Error::ReadError(GetLastError(), count, "pointer").into());
         }
 
@@ -360,14 +365,14 @@ impl Game {
 
         let mut str_raw: Vec<u16> = Vec::with_capacity(str_len as usize);
         let read_result = ReadProcessMemory(
-            self.handle,
+            self.handle as *mut c_void,
             (address + 12) as *mut c_void,
             str_raw.as_mut_ptr() as *mut c_void,
             str_len as usize * size_of::<u16>(),
             &mut count,
         );
 
-        if read_result.is_err() || count / size_of::<u16>() != str_len as usize {
+        if read_result == 0 || count / size_of::<u16>() != str_len as usize {
             return Err(Error::ReadError(GetLastError(), count, "string").into());
         }
 
@@ -386,17 +391,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x0287BB14; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x01E247C4; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x0289744C; // GameData
+    const CLASS_OFFSET: GameUSize = 0x01E3F0F8; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x028747C0; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x01E1CEEC; // MeetingHud
 }
