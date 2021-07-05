@@ -43,6 +43,7 @@ pub enum State {
 #[repr(u32)]
 #[derive(Debug, Clone)]
 pub enum MeetingState {
+    Animating,
     Discussion,
     NotVoted,
     Voted,
@@ -312,7 +313,7 @@ impl Game {
     }
 
     unsafe fn read_meeting_progress(&self, meeting_screen_addr: GameUSize) -> Result<MeetingState> {
-        const MEETING_STATE_OFFSET: GameUSize = 0x84;
+        const MEETING_STATE_OFFSET: GameUSize = 0x74;
 
         let mut meeting_state = MaybeUninit::<MeetingState>::uninit();
         let mut count = 0;
@@ -391,17 +392,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x01D9DBB4; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x01D17F2C; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x01DB84E8; // GameData
+    const CLASS_OFFSET: GameUSize = 0x01D31998; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x01D962DC; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x01D0E988; // MeetingHud
 }
