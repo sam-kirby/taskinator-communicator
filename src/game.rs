@@ -392,17 +392,17 @@ trait InstancedClass {
 struct ClientState {}
 
 impl InstancedClass for ClientState {
-    const CLASS_OFFSET: GameUSize = 0x01D17F2C; // AmongUsClient
+    const CLASS_OFFSET: GameUSize = 0x01BAA960; // AmongUsClient
 }
 
 struct PlayerManager {}
 
 impl InstancedClass for PlayerManager {
-    const CLASS_OFFSET: GameUSize = 0x01D31998; // GameData
+    const CLASS_OFFSET: GameUSize = 0x01BC2EAC; // GameData
 }
 
 struct MeetingScreen {}
 
 impl InstancedClass for MeetingScreen {
-    const CLASS_OFFSET: GameUSize = 0x01D0E988; // MeetingHud
+    const CLASS_OFFSET: GameUSize = 0x01B9F7A0; // MeetingHud
 }
